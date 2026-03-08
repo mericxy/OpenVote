@@ -3,6 +3,23 @@ import { z } from 'zod';
 import { votesController } from '../controllers/votes.controller.js';
 
 export const votesRoutes: FastifyPluginAsyncZod = async (app) => {
+  // Rota de replicação externa (não autenticada para simplificar entre nós)
+  app.post('/replicate', {
+    schema: {
+      body: z.object({
+        user_email: z.string().email(),
+        topic_id: z.number(),
+        score: z.number().int().min(0).max(5),
+      }),
+      response: {
+        200: z.object({
+          replicated: z.boolean(),
+        }),
+      },
+    },
+  }, votesController.replicate);
+
+  // Rotas normais
   app.addHook('onRequest', app.authenticate);
 
   app.post('/', {

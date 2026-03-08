@@ -1,5 +1,5 @@
 import { db } from '../db/index.js';
-import { votes, topics } from '../db/schema.js';
+import { votes, topics, users } from '../db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { httpErrors } from '@fastify/sensible';
 
@@ -37,6 +37,22 @@ export const votesService = {
       .returning();
     
     return inserted;
+  },
+
+  async replicate(userEmail: string, topicId: number, score: number) {
+    const user = await db.select().from(users).where(eq(users.email, userEmail)).get();
+    if (!user) {
+       console.error(`[Distributed Systems] Usuário ${userEmail} não encontrado para replicação.`);
+       return;
+    }
+
+    const topic = await db.select().from(topics).where(eq(topics.id, topicId)).get();
+    if (!topic) {
+       console.error(`[Distributed Systems] Tópico ${topicId} não encontrado para replicação.`);
+       return;
+    }
+
+    return this.upsert(user.id, topicId, score);
   },
 
   async getMyVotes(userId: number) {
