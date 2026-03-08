@@ -9,7 +9,7 @@ export const votesController = {
 
     const peerUrl = process.env.REPLICATION_PEER_URL;
     if (peerUrl) {
-      console.log(`[Distributed Systems] Replicando voto do usuário ${request.user.email} para ${peerUrl}`);
+      console.log(`[Distributed Systems] Replicando voto de ${request.user.email} para ${peerUrl}/votes/replicate`);
       
       fetch(`${peerUrl}/votes/replicate`, {
         method: 'POST',
@@ -19,8 +19,15 @@ export const votesController = {
           topic_id,
           score,
         }),
+      }).then(async res => {
+        if (res.ok) {
+           console.log(`[Distributed Systems] ✅ Sucesso: Replicação confirmada por ${peerUrl}`);
+        } else {
+           const body = await res.text().catch(() => '');
+           console.error(`[Distributed Systems] ❌ Erro: ${peerUrl} retornou Status ${res.status}. Resposta: ${body}`);
+        }
       }).catch(err => {
-        console.error(`[Distributed Systems] Erro na replicação para ${peerUrl}:`, err.message);
+        console.error(`[Distributed Systems] ❌ Erro na replicação para ${peerUrl}:`, err.message);
       });
     }
 
