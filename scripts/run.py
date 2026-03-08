@@ -6,6 +6,7 @@ import sys
 import time
 import signal
 import hashlib
+import argparse
 from pathlib import Path
 
 IS_WINDOWS = platform.system().lower() == "windows"
@@ -34,17 +35,22 @@ def save_hash(target_file: Path, hash_file: Path):
     with open(hash_file, "w") as f:
         f.write(get_file_hash(target_file))
 
-def start_process(cmd: list[str], cwd: Path, name: str) -> subprocess.Popen:
+def start_process(cmd: list[str], cwd: Path, name: str, env: dict = None) -> subprocess.Popen:
     kwargs = {}
     if IS_WINDOWS:
         kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
     else:
         kwargs['start_new_session'] = True
 
+    current_env = os.environ.copy()
+    if env:
+        current_env.update(env)
+
     return subprocess.Popen(
         cmd,
         cwd=cwd,
         stdin=subprocess.DEVNULL,
+        env=current_env,
         **kwargs
     )
 
@@ -77,7 +83,6 @@ def ensure_env_file(project_dir: Path):
 
 def ensure_db_setup(api_dir: Path, npm_exec: str):
     db_file = api_dir / "dev.db"
-    # Se o banco não existe, rodar o push do drizzle
     if not db_file.exists():
         print("Banco de dados não encontrado. Executando drizzle-kit push...")
         if subprocess.call([npm_exec, "run", "db:push"], cwd=api_dir) != 0:
@@ -135,6 +140,10 @@ def resolve_npm_executable() -> str:
     return npm_path
 
 def main():
+    parser = argparse.ArgumentParser(description="Script de execução OpenVote")
+    parser.add_argument("--prod", action="store_true", help="Executa em modo de produção (build frontend + static serve)")
+    args = parser.parse_args()
+
     root = Path(__file__).parent.parent
     api_dir = root / "api"
     frontend_dir = root / "frontend"
@@ -142,7 +151,7 @@ def main():
     if not api_dir.exists() or not frontend_dir.exists():
         raise FileNotFoundError("Pastas 'api' ou 'frontend' não foram encontradas no diretório raiz.")
 
-    print("-------------------🛠 Preparando ambiente OpenVote-------------------")
+    print(f"-------------------🛠 Preparando ambiente OpenVote ({'PRODUÇÃO' if args.prod else 'DESENVOLVIMENTO'})-------------------")
     npm_exec = resolve_npm_executable()
     
     ensure_env_file(api_dir)
@@ -155,30 +164,45 @@ def main():
     frontend_port = 5173
     
     kill_port(api_port)
-    kill_port(frontend_port)
-    
-    api_cmd = [npm_exec, "run", "dev"]
-    frontend_cmd = [npm_exec, "run", "dev"]
+    if not args.prod:
+        kill_port(frontend_port)
 
-    print("\nIniciando API...")
-    api_proc = start_process(api_cmd, api_dir, name="API")
+    processes = []
 
-    print("Iniciando Frontend...")
-    frontend_proc = start_process(frontend_cmd, frontend_dir, name="Frontend")
+    if args.prod:
+        print("\nGerando build do frontend...")
+        if subprocess.call([npm_exec, "run", "build"], cwd=frontend_dir) != 0:
+            raise RuntimeError("Falha ao buildar o frontend.")
+        
+        print("Iniciando API em modo produção (servindo frontend)...")
+        # Em produção usamos 'npm run dev' mas com NODE_ENV=production para simplificar o TSX, 
+        # ou poderíamos usar 'npm start' se tivesse build da API. 
+        # Como o projeto usa tsx no dev, manteremos assim mas com a flag de produção.
+        api_proc = start_process([npm_exec, "run", "dev"], api_dir, name="API", env={"NODE_ENV": "production"})
+        processes.append(("API", api_proc))
+    else:
+        print("\nIniciando API em modo desenvolvimento...")
+        api_proc = start_process([npm_exec, "run", "dev"], api_dir, name="API")
+        processes.append(("API", api_proc))
 
-    print("\n---------------------OpenVote Rodando!-----------------------")
-    print(f"API:      http://localhost:{api_port}")
-    print(f"Frontend: http://localhost:{frontend_port}")
+        print("Iniciando Frontend em modo desenvolvimento...")
+        frontend_proc = start_process([npm_exec, "run", "dev"], frontend_dir, name="Frontend")
+        processes.append(("Frontend", frontend_proc))
+
+    print(f"\n---------------------OpenVote Rodando ({'PROD' if args.prod else 'DEV'})!-----------------------")
+    print(f"Acesse: http://localhost:{api_port}")
+    if not args.prod:
+        print(f"Frontend Dev: http://localhost:{frontend_port}")
     print("-------------------------------------------------------------\n")
     
     try:
-        wait_processes([("API", api_proc), ("Frontend", frontend_proc)])
-
+        wait_processes(processes)
     finally:
-        kill_recursive(api_proc)
-        kill_recursive(frontend_proc)
+        for name, proc in processes:
+            kill_recursive(proc)
         kill_port(api_port)
-        kill_port(frontend_port)
+        if not args.prod:
+            kill_port(frontend_port)
 
 if __name__ == "__main__":
     main()

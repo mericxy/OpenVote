@@ -46,14 +46,20 @@ O projeto possui um script de automação que cuida de toda a configuração ini
 Basta clonar o repositório e executar:
 
 ```bash
+# Modo Desenvolvimento (Inicia API e Frontend separadamente)
 python scripts/run.py
+
+# Modo Produção (Builda o frontend e o serve através da API)
+python scripts/run.py --prod
 ```
 
 O script irá:
 1.  Verificar e instalar as dependências da **API** e do **Frontend**.
 2.  Configurar o arquivo `.env` automaticamente.
 3.  Criar o banco de dados SQLite (`dev.db`) e popular com dados iniciais (se necessário).
-4.  Iniciar a API (`http://localhost:3333`) e o Frontend (`http://localhost:5173`) em paralelo.
+4.  No modo **dev**: Inicia a API (`:3333`) e o Frontend (`:5173`) em paralelo.
+5.  No modo **prod**: Gera o build do frontend e inicia apenas a API, que servirá os arquivos estáticos.
+
 
 ---
 
