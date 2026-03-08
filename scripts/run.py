@@ -174,11 +174,12 @@ def main():
         if subprocess.call([npm_exec, "run", "build"], cwd=frontend_dir) != 0:
             raise RuntimeError("Falha ao buildar o frontend.")
         
+        print("Gerando build da API...")
+        if subprocess.call([npm_exec, "run", "build"], cwd=api_dir) != 0:
+            raise RuntimeError("Falha ao buildar a API.")
+        
         print("Iniciando API em modo produção (servindo frontend)...")
-        # Em produção usamos 'npm run dev' mas com NODE_ENV=production para simplificar o TSX, 
-        # ou poderíamos usar 'npm start' se tivesse build da API. 
-        # Como o projeto usa tsx no dev, manteremos assim mas com a flag de produção.
-        api_proc = start_process([npm_exec, "run", "dev"], api_dir, name="API", env={"NODE_ENV": "production"})
+        api_proc = start_process([npm_exec, "run", "start"], api_dir, name="API", env={"NODE_ENV": "production"})
         processes.append(("API", api_proc))
     else:
         print("\nIniciando API em modo desenvolvimento...")

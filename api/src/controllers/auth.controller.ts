@@ -4,7 +4,7 @@ import { authService } from '../services/auth.service.js';
 
 export const authController = {
   async register(request: FastifyRequest<{ Body: any }>, reply: FastifyReply) {
-    const { name, email, password } = request.body;
+    const { name, email, password } = request.body as any;
     const password_hash = await bcrypt.hash(password, 10);
     
     const user = await authService.register({ name, email, password_hash });
@@ -14,7 +14,7 @@ export const authController = {
   },
 
   async login(request: FastifyRequest<{ Body: any }>, reply: FastifyReply) {
-    const { email, password } = request.body;
+    const { email, password } = request.body as any;
     const user = await authService.login({ email, password_plain: password });
     
     const token = await reply.jwtSign({

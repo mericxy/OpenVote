@@ -3,7 +3,7 @@ import { api } from '../services/api';
 import type { Topic } from '../types';
 import StarRating from '../components/StarRating';
 import { useAuth } from '../contexts/AuthContext';
-import { MessageSquare, Users, Loader2 } from 'lucide-react';
+import { Users, Loader2 } from 'lucide-react';
 
 const Home: React.FC = () => {
   const [topics, setTopics] = useState<Topic[]>([]);

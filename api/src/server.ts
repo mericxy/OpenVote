@@ -32,7 +32,11 @@ app.register(authMiddleware);
 
 // Configuração para servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {
-  const frontendPath = path.resolve(__dirname, '../../frontend/dist');
+  const isDist = __dirname.endsWith('dist');
+  const frontendPath = isDist 
+    ? path.resolve(__dirname, '../../frontend/dist')
+    : path.resolve(__dirname, '../frontend/dist');
+
   app.register(fastifyStatic, {
     root: frontendPath,
   });
