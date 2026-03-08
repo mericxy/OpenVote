@@ -7,7 +7,7 @@
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
     "build": "tsc",
-    "db:push": "drizzle-kit push:sqlite",
+    "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "seed": "tsx scripts/seed.ts"
   },
