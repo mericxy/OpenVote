@@ -1,4 +1,4 @@
-# OpenVote — Sistema de Votação Estrelada
+# OpenVote — Sistema de Votação
 
 **OpenVote** é uma aplicação web de votação simples e eficiente, onde usuários autenticados podem votar em temas específicos com notas de 0 a 5 estrelas. O sistema conta com um painel administrativo para gerenciamento de temas e visualização de métricas da plataforma.
 
@@ -99,6 +99,7 @@ npm run dev
 |---|---|---|
 | **Administrador** | `admin@openvote.com` | `admin123` |
 | **Usuário Comum** | `joao@email.com` | `user123` |
+| **Usuário Comum** | `maria@email.com`| `user123` |
 
 ---
 

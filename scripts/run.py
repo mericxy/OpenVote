@@ -82,14 +82,14 @@ def ensure_env_file(project_dir: Path):
             print(f"⚠ Aviso: .env não encontrado em {project_dir} e .env.example também não existe.")
 
 def ensure_db_setup(api_dir: Path, npm_exec: str):
-    db_file = api_dir / "dev.db"
-    if not db_file.exists():
-        print("Banco de dados não encontrado. Executando drizzle-kit push...")
-        if subprocess.call([npm_exec, "run", "db:push"], cwd=api_dir) != 0:
-             print("⚠ Falha ao rodar db:push. Verifique as configurações do banco.")
-        else:
-             print("Populando banco de dados inicial (seed)...")
-             subprocess.call([npm_exec, "run", "seed"], cwd=api_dir)
+    print("Aplicando schema do banco (drizzle-kit push)...")
+    
+    if subprocess.call([npm_exec, "run", "db:push"], cwd=api_dir) != 0:
+        print("⚠ Falha ao aplicar schema do banco.")
+        return
+    
+    print("Populando banco de dados inicial (seed)...")
+    subprocess.call([npm_exec, "run", "seed"], cwd=api_dir)
 
 def kill_recursive(proc: subprocess.Popen):
     if proc.poll() is not None:
@@ -153,6 +153,8 @@ def main():
 
     print(f"-------------------🛠 Preparando ambiente OpenVote ({'PRODUÇÃO' if args.prod else 'DESENVOLVIMENTO'})-------------------")
     npm_exec = resolve_npm_executable()
+    if not shutil.which("make"):
+        raise RuntimeError("make não encontrado. Instale build-essential.")
     
     ensure_env_file(api_dir)
     ensure_npm_packages(api_dir, npm_exec, "API")
