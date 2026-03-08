@@ -34,3 +34,5 @@ dist-ssr
 *.db-journal
 *.db-shm
 *.db-wal
+
+.installed_hash
