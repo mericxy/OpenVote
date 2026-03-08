@@ -36,15 +36,37 @@ A aplicação tem como objetivos principais:
 ## 🚀 Como Rodar o Projeto
 
 ### Pré-requisitos
-- Node.js (v18 ou superior)
-- npm ou yarn
+- **Node.js** (v18 ou superior)
+- **Python** (v3.10 ou superior)
 
-### 1. Configurando o Backend (API)
+### 🏃 Execução Rápida (Recomendado)
+
+O projeto possui um script de automação que cuida de toda a configuração inicial (instalação de dependências, criação do banco de dados e execução dos servidores).
+
+Basta clonar o repositório e executar:
+
+```bash
+python scripts/run.py
+```
+
+O script irá:
+1.  Verificar e instalar as dependências da **API** e do **Frontend**.
+2.  Configurar o arquivo `.env` automaticamente.
+3.  Criar o banco de dados SQLite (`dev.db`) e popular com dados iniciais (se necessário).
+4.  Iniciar a API (`http://localhost:3333`) e o Frontend (`http://localhost:5173`) em paralelo.
+
+---
+
+### 🛠️ Execução Manual (Passo a Passo)
+
+Caso prefira configurar manualmente, siga os passos abaixo:
+
+#### 1. Configurando o Backend (API)
 ```bash
 cd api
 # Instalar dependências
 npm install
-# Configurar variáveis de ambiente (edite o arquivo .env conforme necessário)
+# Configurar variáveis de ambiente
 cp .env.example .env
 # Gerar o banco de dados e as tabelas
 npx drizzle-kit push
@@ -53,9 +75,8 @@ npm run seed
 # Iniciar o servidor
 npm run dev
 ```
-A API estará rodando em `http://localhost:3333`.
 
-### 2. Configurando o Frontend
+#### 2. Configurando o Frontend
 ```bash
 cd frontend
 # Instalar dependências
@@ -63,7 +84,6 @@ npm install
 # Iniciar o servidor de desenvolvimento
 npm run dev
 ```
-O frontend estará acessível em `http://localhost:5173`.
 
 ---
 
