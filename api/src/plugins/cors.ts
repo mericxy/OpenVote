@@ -4,5 +4,7 @@ import fastifyCors from '@fastify/cors';
 export default fp(async (app) => {
   app.register(fastifyCors, {
     origin: true, // Em prod, definir a URL do frontend
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 });

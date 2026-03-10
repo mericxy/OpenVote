@@ -1,30 +1,31 @@
-import { sqliteTable, text, integer, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { mysqlTable, varchar, int, mysqlEnum, timestamp, uniqueIndex } from 'drizzle-orm/mysql-core';
+import { sql } from 'drizzle-orm';
 
-export const users = sqliteTable('users', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  name: text('name').notNull(),
-  email: text('email').notNull().unique(),
-  password_hash: text('password_hash').notNull(),
-  role: text('role', { enum: ['user', 'admin'] }).notNull().default('user'),
-  created_at: text('created_at').notNull().default(new Date().toISOString()),
+export const users = mysqlTable('users', {
+  id: int('id').primaryKey().autoincrement(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).notNull().unique(),
+  password_hash: varchar('password_hash', { length: 255 }).notNull(),
+  role: mysqlEnum('role', ['user', 'admin']).notNull().default('user'),
+  created_at: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const topics = sqliteTable('topics', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  title: text('title').notNull(),
-  description: text('description').notNull(),
-  created_by: integer('created_by').notNull().references(() => users.id),
-  created_at: text('created_at').notNull().default(new Date().toISOString()),
-  updated_at: text('updated_at').notNull().default(new Date().toISOString()),
+export const topics = mysqlTable('topics', {
+  id: int('id').primaryKey().autoincrement(),
+  title: varchar('title', { length: 255 }).notNull(),
+  description: varchar('description', { length: 500 }).notNull(),
+  created_by: int('created_by').notNull().references(() => users.id),
+  created_at: timestamp('created_at').notNull().defaultNow(),
+  updated_at: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
 });
 
-export const votes = sqliteTable('votes', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  user_id: integer('user_id').notNull().references(() => users.id),
-  topic_id: integer('topic_id').notNull().references(() => topics.id, { onDelete: 'cascade' }),
-  score: integer('score').notNull(),
-  created_at: text('created_at').notNull().default(new Date().toISOString()),
-  updated_at: text('updated_at').notNull().default(new Date().toISOString()),
+export const votes = mysqlTable('votes', {
+  id: int('id').primaryKey().autoincrement(),
+  user_id: int('user_id').notNull().references(() => users.id),
+  topic_id: int('topic_id').notNull().references(() => topics.id, { onDelete: 'cascade' }),
+  score: int('score').notNull(),
+  created_at: timestamp('created_at').notNull().defaultNow(),
+  updated_at: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
 }, (table) => ({
   userTopicUnique: uniqueIndex('user_topic_unique').on(table.user_id, table.topic_id),
 }));

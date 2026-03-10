@@ -5,58 +5,47 @@ import { httpErrors } from '@fastify/sensible';
 
 export const votesService = {
   async upsert(userId: number, topicId: number, score: number) {
-    const topic = await db.select().from(topics).where(eq(topics.id, topicId)).get();
+    const topicResult = await db.select().from(topics).where(eq(topics.id, topicId)).limit(1);
+    const topic = topicResult[0];
     if (!topic) throw httpErrors.notFound('Topic not found');
 
-    const existing = await db
+    const existingResult = await db
       .select()
       .from(votes)
       .where(and(eq(votes.user_id, userId), eq(votes.topic_id, topicId)))
-      .get();
-
-    const now = new Date().toISOString();
+      .limit(1);
+    const existing = existingResult[0];
 
     if (existing) {
-      const [updated] = await db
+      await db
         .update(votes)
-        .set({ score, updated_at: now })
-        .where(eq(votes.id, existing.id))
-        .returning();
-      return updated;
+        .set({ score })
+        .where(eq(votes.id, existing.id));
+      
+      const [updated] = await db.select().from(votes).where(eq(votes.id, existing.id)).limit(1);
+      return {
+        ...updated,
+        updated_at: updated.updated_at ? updated.updated_at.toISOString() : new Date().toISOString()
+      };
     }
 
-    const [inserted] = await db
+    const [result] = await db
       .insert(votes)
       .values({
         user_id: userId,
         topic_id: topicId,
         score,
-        created_at: now,
-        updated_at: now,
-      })
-      .returning();
+      });
     
-    return inserted;
-  },
-
-  async replicate(userEmail: string, topicId: number, score: number) {
-    const user = await db.select().from(users).where(eq(users.email, userEmail)).get();
-    if (!user) {
-       console.error(`[Distributed Systems] Usuário ${userEmail} não encontrado para replicação.`);
-       return;
-    }
-
-    const topic = await db.select().from(topics).where(eq(topics.id, topicId)).get();
-    if (!topic) {
-       console.error(`[Distributed Systems] Tópico ${topicId} não encontrado para replicação.`);
-       return;
-    }
-
-    return this.upsert(user.id, topicId, score);
+    const [inserted] = await db.select().from(votes).where(eq(votes.id, result.insertId)).limit(1);
+    return {
+      ...inserted,
+      updated_at: inserted.updated_at ? inserted.updated_at.toISOString() : new Date().toISOString()
+    };
   },
 
   async getMyVotes(userId: number) {
-    return db
+    const results = await db
       .select({
         topic_id: votes.topic_id,
         topic_title: topics.title,
@@ -65,7 +54,11 @@ export const votesService = {
       })
       .from(votes)
       .innerJoin(topics, eq(votes.topic_id, topics.id))
-      .where(eq(votes.user_id, userId))
-      .all();
+      .where(eq(votes.user_id, userId));
+
+    return results.map(v => ({
+      ...v,
+      updated_at: v.updated_at ? v.updated_at.toISOString() : new Date().toISOString()
+    }));
   }
 };

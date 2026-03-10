@@ -82,10 +82,14 @@ def ensure_env_file(project_dir: Path):
             print(f"⚠ Aviso: .env não encontrado em {project_dir} e .env.example também não existe.")
 
 def ensure_db_setup(api_dir: Path, npm_exec: str):
-    print("Aplicando schema do banco (drizzle-kit push)...")
+    print("Aplicando migrações do banco (drizzle-kit migrate)...")
     
-    if subprocess.call([npm_exec, "run", "db:push"], cwd=api_dir) != 0:
-        print("⚠ Falha ao aplicar schema do banco.")
+    # Gerar migrations caso não existam (opcional, mas seguro)
+    # subprocess.call([npm_exec, "run", "db:generate"], cwd=api_dir)
+    
+    # Usar migrate para MariaDB
+    if subprocess.call(["npx", "drizzle-kit", "migrate"], cwd=api_dir) != 0:
+        print("⚠ Falha ao aplicar migrações do banco. Certifique-se que o MariaDB está rodando.")
         return
     
     print("Populando banco de dados inicial (seed)...")

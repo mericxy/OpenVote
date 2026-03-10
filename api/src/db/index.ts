@@ -1,19 +1,16 @@
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/mysql2';
+import mysql from 'mysql2/promise';
 import * as schema from './schema.js';
 import * as dotenv from 'dotenv';
-import path from 'path';
 
 dotenv.config();
 
-let dbPath = process.env.DATABASE_URL || 'dev.db';
+const connection = await mysql.createPool({
+  host: process.env.DB_HOST || 'localhost',
+  port: Number(process.env.DB_PORT) || 3306,
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'openvote',
+});
 
-// Se o caminho começar com file:, remove (drizzle-kit às vezes injeta isso)
-if (dbPath.startsWith('file:')) {
-  dbPath = dbPath.replace('file:', '');
-}
-
-console.log('Final Database Path:', dbPath);
-
-const sqlite = new Database(dbPath);
-export const db = drizzle(sqlite, { schema });
+export const db = drizzle(connection, { schema, mode: 'default' });

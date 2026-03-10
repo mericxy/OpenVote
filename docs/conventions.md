@@ -77,7 +77,11 @@ export async function getTopicById(id: number) {
 Sempre lidas via `process.env`, nunca hardcoded. Arquivo `.env.example`:
 
 ```env
-DATABASE_URL=./dev.db
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=
+DB_NAME=openvote
 JWT_SECRET=troca_esse_valor_para_producao
 PORT=3333
 NODE_ENV=development
@@ -90,9 +94,9 @@ NODE_ENV=development
 O seed deve criar:
 1. 1 admin: `admin@openvote.com` / senha `admin123`
 2. 2 usuários comuns com alguns votos
-3. 3 temas de exemplo
+3. 2 temas de exemplo
 
-Executar com: `npx tsx scripts/seed.ts`
+Executar com: `npm run seed` (dentro da pasta api)
 
 ---
 
@@ -112,7 +116,6 @@ Não implemente as funcionalidades abaixo, mesmo que pareçam simples ou úteis.
 
 ## Próximos passos previstos (não implementar agora)
 
-- Migração do driver Drizzle de SQLite → PostgreSQL
-- Replicação via PostgreSQL streaming replication
+- Replicação entre instâncias MariaDB (Distributed Systems)
 - Frontend React + Vite consumindo esta API
 - WebSocket para médias em tempo real

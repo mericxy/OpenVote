@@ -30,13 +30,6 @@ app.register(corsPlugin);
 app.register(jwtPlugin);
 app.register(authMiddleware);
 
-// Logger para Sistemas Distribuídos - mostra o que está chegando na rede
-app.addHook('onRequest', async (request) => {
-  if (request.url.includes('replicate')) {
-    console.log(`[Rede] Chamada recebida: ${request.method} ${request.url} de ${request.ip}`);
-  }
-});
-
 // Configuração para servir o frontend em produção
 if (process.env.NODE_ENV === 'production') {
   const isDist = __dirname.endsWith('dist');

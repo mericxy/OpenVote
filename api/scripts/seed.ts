@@ -1,47 +1,54 @@
 import { db } from '../src/db/index.js';
 import { users, topics, votes } from '../src/db/schema.js';
 import bcrypt from 'bcryptjs';
+import { eq } from 'drizzle-orm';
 
 async function seed() {
   console.log('🌱 Seeding database...');
 
   // 1. Admin
   const adminPassword = await bcrypt.hash('admin123', 10);
-  const [admin] = await db.insert(users).values({
+  const [adminInsert] = await db.insert(users).values({
     name: 'Admin',
     email: 'admin@openvote.com',
     password_hash: adminPassword,
     role: 'admin',
-  }).returning();
+  });
+  
+  const [admin] = await db.select().from(users).where(eq(users.id, adminInsert.insertId)).limit(1);
 
   // 2. Users
   const userPassword = await bcrypt.hash('user123', 10);
-  const [user1] = await db.insert(users).values({
+  const [user1Insert] = await db.insert(users).values({
     name: 'João Silva',
     email: 'joao@email.com',
     password_hash: userPassword,
     role: 'user',
-  }).returning();
+  });
+  const [user1] = await db.select().from(users).where(eq(users.id, user1Insert.insertId)).limit(1);
 
-  const [user2] = await db.insert(users).values({
+  const [user2Insert] = await db.insert(users).values({
     name: 'Maria Souza',
     email: 'maria@email.com',
     password_hash: userPassword,
     role: 'user',
-  }).returning();
+  });
+  const [user2] = await db.select().from(users).where(eq(users.id, user2Insert.insertId)).limit(1);
 
   // 3. Topics
-  const [topic1] = await db.insert(topics).values({
+  const [topic1Insert] = await db.insert(topics).values({
     title: 'Framework Frontend Favorito',
     description: 'Qual framework você prefere usar em 2026?',
     created_by: admin.id,
-  }).returning();
+  });
+  const [topic1] = await db.select().from(topics).where(eq(topics.id, topic1Insert.insertId)).limit(1);
 
-  const [topic2] = await db.insert(topics).values({
+  const [topic2Insert] = await db.insert(topics).values({
     title: 'Melhor Linguagem para Backend',
     description: 'Node.js, Rust, Go ou Python?',
     created_by: admin.id,
-  }).returning();
+  });
+  const [topic2] = await db.select().from(topics).where(eq(topics.id, topic2Insert.insertId)).limit(1);
 
   // 4. Votes
   await db.insert(votes).values([

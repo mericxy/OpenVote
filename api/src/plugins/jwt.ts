@@ -9,11 +9,6 @@ export default fp(async (app) => {
   });
 
   app.decorate('authenticate', async (request, reply) => {
-    // Pula autenticação para replicação de votos (sistemas distribuídos)
-    if (request.url.includes('/votes/replicate')) {
-      return;
-    }
-
     try {
       await request.jwtVerify();
     } catch (err) {

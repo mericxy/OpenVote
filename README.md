@@ -20,8 +20,8 @@ A aplicação tem como objetivos principais:
 - **Runtime:** Node.js
 - **Framework:** Fastify (com suporte a Zod para validação)
 - **Linguagem:** TypeScript
-- **ORM:** Drizzle ORM (Compatível com PostgreSQL)
-- **Banco de Dados (Dev):** SQLite (`better-sqlite3`)
+- **ORM:** Drizzle ORM (Compatível com MariaDB/MySQL)
+- **Banco de Dados:** MariaDB (via driver `mysql2`)
 - **Autenticação:** JWT (`@fastify/jwt`)
 
 ### Frontend (`/frontend`)
@@ -37,13 +37,14 @@ A aplicação tem como objetivos principais:
 
 ### Pré-requisitos
 - **Node.js** (v18 ou superior)
-- **Python** (v3.10 ou superior)
+- **MariaDB** (ou MySQL 8+) rodando localmente ou via Docker
+- **Python** (v3.10 ou superior) para automação
 
 ### 🏃 Execução Rápida (Recomendado)
 
-O projeto possui um script de automação que cuida de toda a configuração inicial (instalação de dependências, criação do banco de dados e execução dos servidores).
+O projeto possui um script de automação que cuida de toda a configuração inicial (instalação de dependências e execução dos servidores).
 
-Basta clonar o repositório e executar:
+**Importante:** Antes de rodar o script, certifique-se que o MariaDB está ativo e que você possui as credenciais configuradas no seu `.env` (o script irá criar um `.env` a partir do `.env.example` na primeira execução).
 
 ```bash
 # Modo Desenvolvimento (Inicia API e Frontend separadamente)
@@ -55,11 +56,10 @@ python scripts/run.py --prod
 
 O script irá:
 1.  Verificar e instalar as dependências da **API** e do **Frontend**.
-2.  Configurar o arquivo `.env` automaticamente.
-3.  Criar o banco de dados SQLite (`dev.db`) e popular com dados iniciais (se necessário).
+2.  Configurar o arquivo `.env` automaticamente (se não existir).
+3.  Aplicar as migrações no MariaDB e popular com dados iniciais (seed).
 4.  No modo **dev**: Inicia a API (`:3333`) e o Frontend (`:5173`) em paralelo.
 5.  No modo **prod**: Gera o build do frontend e inicia apenas a API, que servirá os arquivos estáticos.
-
 
 ---
 
@@ -72,10 +72,10 @@ Caso prefira configurar manualmente, siga os passos abaixo:
 cd api
 # Instalar dependências
 npm install
-# Configurar variáveis de ambiente
+# Configurar variáveis de ambiente (edite com seus dados do MariaDB)
 cp .env.example .env
-# Gerar o banco de dados e as tabelas
-npx drizzle-kit push
+# Aplicar migrações ao banco de dados
+npx drizzle-kit migrate
 # (Opcional) Popular o banco com dados de teste
 npm run seed
 # Iniciar o servidor
@@ -100,6 +100,17 @@ npm run dev
 | **Administrador** | `admin@openvote.com` | `admin123` |
 | **Usuário Comum** | `joao@email.com` | `user123` |
 | **Usuário Comum** | `maria@email.com`| `user123` |
+
+## 🔄 Replicação de Dados (Sistemas Distribuídos)
+
+A consistência e disponibilidade dos dados entre diferentes nós do sistema são garantidas através da **replicação nativa do MariaDB**.
+
+Para testar em um ambiente distribuído:
+1.  Configure duas instâncias do MariaDB.
+2.  Estabeleça uma topologia de replicação (ex: Master-Slave ou Master-Master).
+3.  Aponte cada instância da API para o seu respectivo nó do banco de dados no arquivo `.env`.
+
+Desta forma, os votos registrados em um nó serão propagados automaticamente para os demais através do log binário do banco de dados, seguindo os princípios de sistemas distribuídos.
 
 ---
 
